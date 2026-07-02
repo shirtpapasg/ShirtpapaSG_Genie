@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Science Claw</title>
+<link rel="stylesheet" href="ds/science-claw-design-system-0049d466-e787-4a70-b5c8-0dc67671c4bb/tokens/colors.css">
+<link rel="stylesheet" href="ds/science-claw-design-system-0049d466-e787-4a70-b5c8-0dc67671c4bb/tokens/typography.css">
+<link rel="stylesheet" href="ds/science-claw-design-system-0049d466-e787-4a70-b5c8-0dc67671c4bb/tokens/spacing.css">
+<link rel="stylesheet" href="ds/science-claw-design-system-0049d466-e787-4a70-b5c8-0dc67671c4bb/tokens/effects.css">
+<link rel="stylesheet" href="ds/science-claw-design-system-0049d466-e787-4a70-b5c8-0dc67671c4bb/styles.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="sound.js"></script>
+<script src="app-state.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    min-height:100vh; display:flex; flex-direction:column; align-items:center;
+    color:var(--sc-text,#e8eef7); font-family:var(--font-body,'Nunito','Segoe UI',system-ui,sans-serif); -webkit-font-smoothing:antialiased;
+    background-color:#070d15;
+    background-image:
+      radial-gradient(1100px 620px at 50% -8%, rgba(74,144,226,.20), rgba(7,13,21,0) 60%),
+      radial-gradient(760px 520px at 50% 112%, rgba(181,87,230,.14), rgba(7,13,21,0) 60%);
+  }
+  a{text-decoration:none;color:inherit}
+  @keyframes float-bob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-8px) rotate(2deg)}}
+  @keyframes rise{from{transform:translateY(16px)}to{transform:translateY(0)}}
+  .rise{animation:rise .5s cubic-bezier(.34,1.56,.64,1) both}
+  .card{display:flex;flex-direction:column;text-align:left;transition:transform .14s ease-out, box-shadow .14s ease-out, border-color .14s ease-out}
+  .card.live{cursor:pointer}
+  .card.live:hover{transform:translateY(-5px)}
+  .card.genie:hover{box-shadow:var(--glow-blue);border-color:var(--sc-blue)}
+  .card.game:hover{box-shadow:var(--glow-green);border-color:var(--sc-green)}
+  /* Registration modal */
+  #reg-overlay{position:fixed;inset:0;background:rgba(4,7,12,.88);backdrop-filter:blur(6px);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px}
+  #reg-overlay.hidden{display:none}
+  #reg-box{background:#0e1925;border:1px solid rgba(255,255,255,.12);border-radius:24px;box-shadow:0 0 60px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.07);padding:36px 32px;width:100%;max-width:420px;text-align:center}
+  #reg-box h2{font:900 26px/1.1 var(--font-display,'Nunito',system-ui);margin:0 0 6px;color:#fff}
+  #reg-box p{font-size:14px;color:#8a98a6;margin:0 0 24px;line-height:1.55}
+  #reg-box label{display:block;font:800 11px/1 var(--font-display,'Nunito',system-ui);letter-spacing:.08em;text-transform:uppercase;color:#8a98a6;text-align:left;margin-bottom:7px}
+  #reg-box input,#reg-box select{width:100%;padding:13px 14px;background:#111c2b;border:1px solid rgba(255,255,255,.16);border-radius:12px;color:#fff;font-family:inherit;font-size:15px;margin-bottom:16px;outline:none;transition:border-color .15s}
+  #reg-box input:focus,#reg-box select:focus{border-color:#4a90e2}
+  #reg-box select option{background:#111c2b}
+  #reg-btn{width:100%;padding:14px;border-radius:12px;border:none;background:linear-gradient(180deg,#6aa9f0,#2f6fd6);color:#fff;font:800 16px/1 var(--font-display,'Nunito',system-ui);cursor:pointer;box-shadow:0 0 16px rgba(74,144,226,.55);transition:filter .15s}
+  #reg-btn:hover{filter:brightness(1.1)}
+  #player-chip{display:none;align-items:center;gap:7px;font:700 13px/1 system-ui;color:#8a98a6;cursor:pointer;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04)}
+  #player-chip:hover{background:rgba(255,255,255,.08)}
+</style>
+</head>
+<!-- Registration gate -->
+<div id="reg-overlay" class="hidden">
+  <div id="reg-box">
+    <div style="font-size:48px;margin-bottom:12px">🧞‍♂️</div>
+    <h2>Welcome to Science Claw!</h2>
+    <p>Enter your name and class before you start. This links your scores to the right student.</p>
+    <label for="reg-name">Your Name</label>
+    <input id="reg-name" type="text" placeholder="e.g. Aarav Tan" autocomplete="off" maxlength="60">
+    <label for="reg-class">Class</label>
+    <input id="reg-class" type="text" placeholder="e.g. 5 Resilience or 6A" autocomplete="off" maxlength="40">
+    <label for="reg-level">Primary Level</label>
+    <select id="reg-level">
+      <option value="P3">Primary 3</option>
+      <option value="P4">Primary 4</option>
+      <option value="P5" selected>Primary 5</option>
+      <option value="P6">Primary 6</option>
+    </select>
+    <button id="reg-btn" onclick="submitReg()">Let's go →</button>
+  </div>
+</div>
+  <header style="width:100%;max-width:880px;display:flex;align-items:center;justify-content:space-between;padding:20px 22px 6px;gap:12px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:26px;filter:drop-shadow(0 0 9px rgba(102,204,255,.6))">🦾</span>
+      <span style="font:900 22px/1 var(--font-display);letter-spacing:.01em">Science <span style="color:var(--sc-cyan);text-shadow:var(--text-glow-cyan,0 0 10px rgba(102,204,255,.6))">Claw</span></span>
+    </div>
+    <div style="display:flex;align-items:center;gap:9px">
+      <div title="Claw credits — shared across every screen" style="display:inline-flex;align-items:center;gap:6px;font:800 14px/1 var(--font-display);color:var(--sc-green-bright);background:rgba(63,195,95,.12);border:1px solid rgba(63,195,95,.35);padding:8px 12px;border-radius:var(--r-pill);box-shadow:var(--glow-green)"><span style="font-size:14px">🪙</span><span id="credits">3</span></div>
+      <div title="Questions in your shared bank" style="display:inline-flex;align-items:center;gap:6px;font:800 14px/1 var(--font-display);color:var(--sc-purple-bright);background:rgba(181,87,230,.12);border:1px solid rgba(181,87,230,.35);padding:8px 12px;border-radius:var(--r-pill)"><span style="font-size:13px">📚</span><span id="bankCount">0</span></div>
+      <div id="player-chip" onclick="openReg()" title="Change player" style="display:none;align-items:center;gap:7px;font:700 13px/1 system-ui;color:#8a98a6;cursor:pointer;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04)">👤 <span id="playerName">—</span></div>
+    </div>
+  </header>
+
+  <main style="width:100%;max-width:880px;flex:1;padding:18px 22px 56px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+
+    <div class="rise" style="text-align:center;margin-bottom:34px">
+      <div style="font-size:54px;animation:float-bob 4.5s ease-in-out infinite;display:inline-block">🧞‍♂️</div>
+      <h1 style="font:900 40px/1.05 var(--font-display);margin:6px 0 0">Science Claw</h1>
+      <p style="color:var(--sc-text-muted);font-size:17px;margin:10px 0 0">Learn the science. Earn the credits. Grab the prizes.</p>
+    </div>
+
+    <div class="rise" style="width:100%;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;animation-delay:.08s">
+
+      <a href="Shirtpapa%20Genie.dc.html" onclick="return navCheck(this)" class="card live genie" style="background:var(--sc-glass);backdrop-filter:var(--blur-panel);border:1px solid var(--sc-glass-line);border-radius:var(--r-xl);box-shadow:var(--shadow-panel),var(--inset-glass);padding:24px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:40px">🧞</span>
+          <span style="font:800 11px/1 var(--font-display);letter-spacing:.06em;text-transform:uppercase;color:#08131f;background:var(--sc-cyan);padding:5px 10px;border-radius:var(--r-pill)">Ready</span>
+        </div>
+        <div style="font:900 22px/1.1 var(--font-display);margin:16px 0 0">ShirtpapaSG Genie V2</div>
+        <div style="color:var(--sc-text-muted);font-size:14px;line-height:1.55;margin-top:8px;flex:1">Stuck on a question? I break it down the <b style="color:var(--sc-red)">C</b><b style="color:var(--sc-blue)">E</b><b style="color:var(--sc-yellow)">C</b><b style="color:var(--sc-green)">L</b> way, coach you to the answer, then bank a twin to lock it in.</div>
+        <div style="display:flex;align-items:center;gap:7px;margin-top:18px;color:var(--sc-cyan);font-weight:800;font-size:14px">Open the Genie <span style="font-size:16px">→</span></div>
+      </a>
+
+      <a href="game.html" onclick="return navCheck(this)" class="card live game" style="background:var(--sc-glass);backdrop-filter:var(--blur-panel);border:1px solid var(--sc-glass-line);border-radius:var(--r-xl);box-shadow:var(--shadow-panel),var(--inset-glass);padding:24px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:40px">🦾</span>
+          <span style="font:800 11px/1 var(--font-display);letter-spacing:.06em;text-transform:uppercase;color:#08131f;background:var(--sc-green-bright);padding:5px 10px;border-radius:var(--r-pill)">Ready</span>
+        </div>
+        <div style="font:900 22px/1.1 var(--font-display);margin:16px 0 0">Claw Machine</div>
+        <div style="color:var(--sc-text-muted);font-size:14px;line-height:1.55;margin-top:8px;flex:1">Spend the credits you earned with the Genie to grab science prizes in a real 3D claw machine and complete your collection.</div>
+        <div style="display:flex;align-items:center;gap:7px;margin-top:18px;color:var(--sc-green-bright);font-weight:800;font-size:14px">Play the machine <span style="font-size:16px">→</span></div>
+      </a>
+
+      <div class="card game" aria-disabled="true" style="background:var(--sc-glass);backdrop-filter:var(--blur-panel);border:1px solid var(--sc-glass-line);border-radius:var(--r-xl);box-shadow:var(--shadow-panel),var(--inset-glass);padding:24px;opacity:.5;filter:grayscale(.7);cursor:not-allowed">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:40px">🎮</span>
+          <span style="font:800 11px/1 var(--font-display);letter-spacing:.06em;text-transform:uppercase;color:#fff;background:var(--sc-line);padding:5px 10px;border-radius:var(--r-pill)">Coming soon</span>
+        </div>
+        <div style="font:900 22px/1.1 var(--font-display);margin:16px 0 0">Memory Match</div>
+        <div style="color:var(--sc-text-muted);font-size:14px;line-height:1.55;margin-top:8px;flex:1">Match concept cards to lock science definitions into memory. Earn credits while you play.</div>
+        <div style="display:flex;align-items:center;gap:7px;margin-top:18px;color:var(--sc-text-faint);font-weight:800;font-size:14px">Coming soon&hellip;</div>
+      </div>
+
+    </div>
+
+    <div class="rise" style="margin-top:30px;text-align:center;color:var(--sc-text-faint);font-size:13px;line-height:1.6;animation-delay:.16s">
+      One app · every screen shares the same <b style="color:var(--sc-green-bright)">credit wallet</b> &amp; <b style="color:var(--sc-purple-bright)">question bank</b><br>
+      via <code style="color:var(--sc-text-muted)">app-state.js</code>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      var S = window.SciClawState;
+      try { if (S) S.seedBank(S.DEFAULT_BANK); } catch (e) {}
+
+      function hasPlayer() {
+        try { var p = S && S.getPlayer(); return p && p.name && p.name !== 'Guest' && p.name.trim().length > 0; } catch(e){ return false; }
+      }
+
+      window.openReg = function () {
+        var ov = document.getElementById('reg-overlay');
+        ov.classList.remove('hidden');
+        setTimeout(function(){ document.getElementById('reg-name').focus(); }, 80);
+        try {
+          var p = S.getPlayer();
+          if (p.name && p.name !== 'Guest') document.getElementById('reg-name').value = p.name;
+          if (p.studentClass) document.getElementById('reg-class').value = p.studentClass;
+          var lv = document.getElementById('reg-level');
+          if (p.level) lv.value = p.level;
+        } catch(e){}
+      };
+
+      window.submitReg = function () {
+        var name = document.getElementById('reg-name').value.trim();
+        if (!name) { document.getElementById('reg-name').style.borderColor='#e8493f'; document.getElementById('reg-name').focus(); return; }
+        var cls = document.getElementById('reg-class').value.trim();
+        var lvl = document.getElementById('reg-level').value;
+        try { S.patchPlayer({ name: name, studentClass: cls || lvl, level: lvl }); } catch(e){}
+        document.getElementById('reg-overlay').classList.add('hidden');
+        updateChip();
+        if (window._pendingNav) { window.location.href = window._pendingNav; window._pendingNav = null; }
+      };
+
+      document.getElementById('reg-name').addEventListener('keydown', function(e){ if(e.key==='Enter') window.submitReg(); });
+      document.getElementById('reg-class').addEventListener('keydown', function(e){ if(e.key==='Enter') window.submitReg(); });
+
+      window.navCheck = function (link) {
+        if (hasPlayer()) return true;
+        window._pendingNav = link.href;
+        openReg();
+        return false;
+      };
+
+      function updateChip() {
+        try {
+          var p = S && S.getPlayer();
+          var chip = document.getElementById('player-chip');
+          var span = document.getElementById('playerName');
+          if (p && p.name && p.name !== 'Guest') {
+            span.textContent = p.name + (p.studentClass ? ' · ' + p.studentClass : '');
+            chip.style.display = 'inline-flex';
+          } else { chip.style.display = 'none'; }
+        } catch(e){}
+      }
+
+      function refresh() {
+        try {
+          document.getElementById('credits').textContent = S ? S.getPlayer().credits : 3;
+          document.getElementById('bankCount').textContent = S ? (S.getBank() || []).length : 0;
+        } catch (e) {}
+        updateChip();
+      }
+      refresh();
+
+      if (!hasPlayer()) openReg();
+
+      window.addEventListener('focus', refresh);
+      document.addEventListener('visibilitychange', function () { if (!document.hidden) refresh(); });
+      window.addEventListener('pointerdown', function once() {
+        try { window.sfx && window.sfx.enter && window.sfx.enter(); } catch (e) {}
+        window.removeEventListener('pointerdown', once);
+      }, { once: true });
+    })();
+  </script>
+</body>
+</html>
